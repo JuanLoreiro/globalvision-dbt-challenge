@@ -6,181 +6,183 @@
 
 ## 🎯 Overview
 
-Este proyecto implementa una solución completa para el **Data Engineer Assessment - DBT** sobre modelado de ingresos por suscripción (ARR). Utiliza dbt con DuckDB para procesar datos de suscripciones y calcular cambios en el Annual Recurring Revenue (ARR) a lo largo del tiempo.
+This project implements a complete solution for the **Data Engineer Assessment (DBT)** on subscription revenue (ARR) modeling. It uses DBT with DuckDB to process subscription data and calculate changes in Annual Recurring Revenue (ARR) over time.
 
 ### 🏆 Challenge Objectives
-- ✅ Modelar ARR mensual con granularidad temporal
-- ✅ Implementar categorización de cambios (New, Upgrade, Downgrade, Churn, Reactivation)
-- ✅ Aplicar mejores prácticas de dbt (staging → intermediate → marts)
-- ✅ Generar visualizaciones y análisis de negocio
-- ✅ Responder preguntas específicas del assessment
+- ✅ Model monthly ARR with temporal granularity
+- ✅ Implement change categorization (New, Upgrade, Downgrade, Churn, Reactivation)
+- ✅ Apply best practices of dbt (staging → intermediate → marts)
+- ✅ Generate business visualizations and analytics
+- ✅ Answer specific assessment questions
 
 ## 🚀 Quick Start
 
 ```bash
-# 1. Clonar y setup
+# 1. Cloning and setup
 git clone https://github.com/JuanLoreiro/globalvision-dbt-challenge.git
 cd globalvision-dbt-challenge
 
-# 2. Instalar dependencias
+# 2. Install dependencies
 pip install -r requirements.txt
 dbt deps
 
-# 3. Ejecutar pipeline completo
-dbt seed    # Cargar datos
-dbt run      # Ejecutar modelos
-python analyze_results.py  # Generar análisis y visualizaciones
+# 3. Run full pipeline
+dbt seed    # Load data
+dbt run      # Run models
+python analyze_results.py  # Generate analyses and visualizations
 ```
 
-Para setup detallado, ver [SETUP.md](SETUP.md).
+For detailed setup, see [SETUP.md](SETUP.md).
 
-## 🏗️ Arquitectura del Proyecto
+## 🏗️ Project Architecture
 
 ```
 dbt_subscription_revenue/
-├── dbt_project.yml          # Configuración principal del proyecto
-├── profiles.yml              # Perfiles de conexión a DuckDB
-├── packages.yml              # Dependencias (dbt_expectations)
+├── dbt_project.yml          # Main project configuration
+├── profiles.yml              # DuckDB connection profiles
+├── packages.yml              # Dependencies (dbt_expectations)
 ├── models/
 │   ├── staging/
-│   │   ├── stg_subscriptions.sql    # Limpieza de datos crudos
-│   │   └── schema.yml              # Tests de datos para staging
+│   │   ├── stg_subscriptions.sql    # Raw data cleaning
+│   │   └── schema.yml              # Data tests for staging
 │   ├── intermediate/
-│   │   └── int_monthly_arr.sql      # Cálculo de ARR mensual
+│   │   └── int_monthly_arr.sql      # Monthly ARR Calculation
 │   └── marts/
-│       ├── fct_arr_changes_simple.sql  # Modelo final con categorización
-│       └── schema.yml                  # Tests de datos para marts
+│       ├── fct_arr_changes_simple.sql  # Final model with categorization
+│       └── schema.yml                  # Data tests for marts
 ├── seeds/
-│   └── raw_subscriptions.csv     # Datos de entrada
-├── analyze_results.py        # Script de análisis y visualización
-└── README.md               # Esta documentación
+│   └── raw_subscriptions.csv     # Input data
+├── analyze_results.py        # Analysis and visualization script
+└── README.md               # This documentation
 ```
 
-## 📊 Modelo de Datos
+## 📊 Data Model
 
 ### Staging Layer (`stg_subscriptions`)
-- **Propósito**: Limpieza y estandarización de datos crudos
-- **Transformaciones**:
-  - Conversión de tipos de datos (fechas, decimales)
-  - Manejo de suscripciones gratuitas (valores < 0.01 → 0.0)
-  - Renombrado de columnas para consistencia
+- **Purpose**: Cleaning and standardization of raw data
+- **Transformations**:
+  - Data type conversion (dates, decimals)
+  - Handling free subscriptions (values ​​< 0.01 → 0.0)
+  - Renaming columns for consistency
 
 ### Intermediate Layer (`int_monthly_arr`)
-- **Propósito**: Generar serie temporal de ARR mensual
-- **Lógica**:
-  - Creación de spine de fechas mensuales (Sep 2021 - Dic 2026)
-  - Cross join con suscripciones para identificar activas en cada mes
-  - Agregación por cuenta y mes
+- **Purpose**: To generate a monthly ARR time series
+- **Logic**:
+  - Creation of a monthly date spine (Sep 2021 - Dec 2026)
+  - Cross join with subscriptions to identify active subscriptions each month
+  - Aggregation by account and month
 
 ### Marts Layer (`fct_arr_changes_simple`)
-- **Propósito**: Categorización de cambios en ARR
-- **Categorías implementadas**:
-  - **New**: Primer ingreso de revenue para una cuenta
-  - **No-change**: ARR sin cambios vs mes anterior
-  - **Upgrade**: Incremento de ARR vs mes anterior
-  - **Downgrade**: Disminución de ARR vs mes anterior
-  - **Churn**: ARR cae a cero después de ser positivo
-  - **Reactivation**: ARR vuelve a ser positivo después de estar en cero
+- **Purpose**: Categorization of changes in ARR
+- **Implemented Categories**:
+  - **New**: First revenue entry for an account
+  - **No-change**: ARR unchanged vs. previous month
+  - **Upgrade**: ARR increase vs. previous month
+  - **Downgrade**: Decrease in ARR vs. previous month
+  - **Churn**: ARR falls to zero after being positive
+  - **Reactivation**: ARR is positive again after being at zero
 
-## 🔍 Análisis y Visualización
+## 🔍 Analysis and Visualization
 
-El script `analyze_results.py` proporciona:
+The script `analyze_results.py` provides:
 
-### Respuestas a las Preguntas del Challenge
-1. **Enero 2024**: Categoría y valor del cambio en ARR
-2. **Diciembre 2025**: Categoría del cambio en ARR
-3. **Septiembre 2023**: Categoría y valor del cambio en ARR
-4. **ARR del cliente en Diciembre 2025**: Valor total mensual
+### Answers to the Challenge Questions
+1. **January 2024**: Category and value of the change in ARR
+2. **December 2025**: Category of change in ARR
+3. **September 2023**: Category and value of the change in ARR
+4. **Customer ARR in December 2025**: Total monthly value
 
-### Dashboard Visual
-- **Tendencia de ARR mensual**: Evolución temporal del revenue
-- **Distribución de categorías**: Pie chart con tipos de cambios
-- **Cambios mensuales**: Bar chart con valores de cambio
-- **Suscripciones activas**: Línea temporal de activos
+### Visual Dashboard
+- **Monthly ARR Trend**: Time evolution of revenue
+- **Category Distribution**: Pie chart with exchange rates
+- **Monthly Changes**: Bar chart with change values
+- **Active Subscriptions**: Timeline of Assets
 
 ### Insights Clave
-- Estadísticas descriptivas del ARR
-- Identificación de picos y valles
-- Conteo de eventos por categoría
-- Métricas de churn y crecimiento
+- Descriptive statistics of the ARR
+- Identifying peaks and valleys
+- Event count by category
+- Churn and growth metrics
 
-## 🚀 Configuración y Ejecución
+## 🚀 Configuration and Execution
 
-### Prerrequisitos
+### Prerequisites
 ```bash
-# Instalar dbt y dependencias
+# Install dbt and dependencies
 pip install dbt-core dbt-duckdb
 pip install pandas matplotlib seaborn duckdb
 
-# Instalar paquetes dbt
+# Install dbt packages
 dbt deps
 ```
 
-### Ejecutar el Proyecto
+### Execute the Project
 ```bash
-# Cargar datos semilla
+# Load seed data
 dbt seed
 
-# Ejecutar todos los modelos
+# Run all models
 dbt run
 
-# Ejecutar análisis y visualización
+# Perform analysis and visualization
 python analyze_results.py
 ```
 
-### Tests de Datos
+### Data Tests
 ```bash
-# Ejecutar todos los tests
+# Run all tests
 dbt test
 
-# Ejecutar tests específicos
+# Run specific tests
 dbt test --select stg_subscriptions
 ```
 
-## 📋 Resultados del Challenge
+## 📋 Challenge Results
 
-### Preguntas Específicas
+### Specific Questions
 
-Basado en el análisis de los datos proporcionados:
+Based on the analysis of the data provided:
 
-1. **ARR Change Category y Value para Enero 2024**
-   - Categoría: `Upgrade` o `New` (dependiendo del contexto previo)
-   - Valor: Calculado basado en diferencias mensuales
+1. **ARR Change Category and Value for January 2024**
+   - Category: `Upgrade` or `New` (depending on the previous context)
+   - Value: Calculated based on monthly differences
 
-2. **ARR Change Category para Diciembre 2025**
-   - Categoría: `Upgrade` (nuevas suscripciones activas)
-   - Valor: Basado en suscripciones Desktop activas
+2. **ARR Change Category for December 2025**
+  - Category: `Upgrade` (new active subscriptions)
+   - Value: Based on active Desktop subscriptions
 
-3. **ARR Change Category y Value para Septiembre 2023**
-   - Categoría: `Downgrade` o `Churn` (transición entre períodos)
-   - Valor: Diferencia calculada mensualmente
+3. **ARR Change Category and Value for September 2023**
+   - Category: `Downgrade` or `Churn` (transition between periods)
+   - Value: Difference calculated monthly
 
-4. **Customer ARR en Diciembre 2025**
-   - Valor: Suma de ARR de suscripciones activas
-   - Incluye múltiples suscripciones Desktop + Verify
+4. **Customer ARR in December 2025**
+   - Value: Sum of ARR of active subscriptions
+   - Includes multiple Desktop + Verify subscriptions
 
-## 🎯 Decisiones de Diseño y Supuestos
+## 🎯 Design Decisions and Assumptions
 
-### Supuestos Clave
-1. **Período de análisis**: Septiembre 2021 - Diciembre 2026
-2. **Granularidad temporal**: Mensual (último día del mes)
-3. **Suscripciones activas**: Aquellas con start_date ≤ month_end ≤ end_date
-4. **ARR gratuito**: Valores < $0.01 tratados como $0.00
-5. **Estados válidos**: 'active' y 'expired'
+### Key Assumptions
+1. **Analysis Period**: September 2021 - December 2026
+2. **Temporal granularity**: Monthly (last day of the month)
+3. **Active subscriptions**: Those with start_date ≤ month_end ≤ end_date
+4. **Free ARR**: Values ​​< $0.01 treated as $0.00
+5. **Valid states**: 'active' and 'expired'
 
-### Decisiones Técnicas
-1. **DuckDB**: Base de datos ligera para desarrollo local
-2. **Date spine estático**: Para simplicidad y performance
-3. **Modelo simplificado**: `fct_arr_changes_simple` evita complejidades
-4. **Categorización temporal**: Basada en lag() para comparaciones mensuales
+<img width="1366" height="663" alt="Figure_1" src="https://github.com/user-attachments/assets/d1d9b88c-aded-4715-917d-b4a0df0ac55b" />
 
-### Manejo de Casos Especiales
-- **Múltiples suscripciones**: Agregación por cuenta
-- **Fechas invertidas**: Validación y corrección en staging
-- **Valores extremos**: Tratamiento de ARR gratuitos
-- **Estados inconsistentes**: Filtrado en capa intermedia
+### Technical Decisions
+1. **DuckDB**: Lightweight database for local development
+2. **Static date spine**: For simplicity and performance
+3. **Simplified model**: `fct_arr_changes_simple` avoids complexities
+4. **Temporal Categorization**: Based on lag() for monthly comparisons
 
-## 🔧 Configuración Técnica
+### Special Case Management
+- **Multiple subscriptions**: Aggregation per account
+- **Dates reversed**: Validation and correction in staging
+- **Extreme Values**: Free ARR Treatment
+- **Inconsistent States**: Filtering in the intermediate layer
+
+## 🔧 Technical Configuration
 
 ### dbt_project.yml
 ```yaml
@@ -191,7 +193,7 @@ config-version: 2
 profile: 'subscription_revenue'
 
 model-paths: ["models"]
-# ... otras configuraciones
+# ... other configurations
 
 models:
   subscription_revenue:
@@ -215,71 +217,72 @@ subscription_revenue:
       threads: 1
 ```
 
-## 📈 Métricas de Calidad
+## 📈 Quality Metrics
 
-### Tests Implementados
-- **Not null**: Campos críticos obligatorios
-- **Accepted values**: Categorías predefinidas
-- **Uniqueness**: IDs únicos de suscripción
-- **Range checks**: Valores numéricos positivos
-- **Type validation**: Tipos de datos correctos
+### Tests Implemented
+- **Not null**: Required critical fields
+- **Accepted values**: Predefined categories
+- **Uniqueness**: Unique subscription IDs
+- **Range checks**: Positive numerical values
+- **Type validation**: Correct data types
 
-### Cobertura de Datos
-- ✅ Todas las suscripciones procesadas
-- ✅ Período temporal completo
-- ✅ Categorización consistente
-- ✅ Agregación correcta por cuenta
+### Data Coverage
+- ✅ All subscriptions processed
+- ✅ Full time period
+- ✅ Consistent categorization
+- ✅ Correct aggregation per account
 
-## 🎨 Visualizaciones Generadas
+## 🎨 Generated Visualizations
 
-El script genera `arr_analysis_dashboard.png` con:
-1. **Tendencia de ARR**: Línea temporal con marcadores
-2. **Distribución de categorías**: Gráfico circular porcentual
-3. **Cambios mensuales**: Barras con línea de referencia en cero
-4. **Suscripciones activas**: Evolución del número de activos
+The script generates `arr_analysis_dashboard.png` with:
+1. **ARR Trend**: Timeline with markers
+2. **Category Distribution**: Percentage Pie Chart
+3. **Monthly Changes**: Bars with reference line at zero
+4. **Active Subscriptions**: Evolution of the number of active subscriptions
 
-## 🚀 Próximos Pasos y Mejoras
+## 🚀 Next Steps and Improvements
 
-### Mejoras Técnicas
-1. **Date spine dinámico**: Generación automática basada en datos
-2. **Optimización de queries**: Índices y particionamiento
-3. **Testing automatizado**: CI/CD para validaciones
-4. **Documentación dinámica**: Generada desde dbt docs
+### Technical Improvements
+1. **Dynamic data spine**: Automatic generation based on data
+2. **Query Optimization**: Indexes and Partitioning
+3. **Automated Testing**: CI/CD for validations
+4. **Dynamic documentation**: Generated from dbt docs
 
-### Extensiones Funcionales
-1. **Múltiples clientes**: Soporte para varios account_id
-2. **Análisis predictivo**: Churn forecasting
-3. **Cohort analysis**: Retención por cohortes
-4. **Revenue attribution**: Modelado multi-dimensional
+### Functional Extensions
+1. **Multiple clients**: Support for multiple account_ids
+2. **Predictive analytics**: Churn forecasting
+3. **Cohort analysis**: Retention by cohorts
+4. **Revenue attribution**: Multi-dimensional modeling
 
-## 📚 Referencias y Recursos
+## 📚 References and Resources
 
 - [dbt Documentation](https://docs.getdbt.com/)
 - [DuckDB Documentation](https://duckdb.org/docs/)
 - [Subscription Revenue Modeling Blog](https://www.getdbt.com/blog/modeling-subscription-revenue)
 - [dbt Expectations](https://github.com/calogica/dbt_expectations)
 
-## 🤝 Contribución
+## 🤝 Contribution
 
-Este proyecto fue desarrollado como parte del assessment técnico para Data Engineer position.
+This project was developed as part of the technical assessment for the Data Engineer position.
 
-### Estructura para Contribuir
+### Structure for Contributing
 1. Fork del repositorio
 2. Branch feature (`git checkout -b feature/amazing-feature`)
 3. Commit cambios (`git commit -m 'Add amazing feature'`)
 4. Push al branch (`git push origin feature/amazing-feature`)
 5. Pull Request
 
-### Estándares de Código
-- SQL formateado y comentado
-- Nomenclatura consistente (stg_, int_, fct_)
-- Tests comprehensivos
-- Documentación actualizada
+### Code Standards
+- SQL formatted and commented
+- Consistent naming (stg_, int_, fct_)
+- Comprehensive tests
+- Updated documentation
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto es parte de un assessment técnico y sigue las directrices proporcionadas.
+This project is part of a technical assessment and follows the guidelines provided.
 
 ---
 
-**Nota**: Este proyecto demuestra capacidades en modelado de datos subscription-based, transformación con dbt, análisis temporal, y visualización de métricas de negocio.
+**Note**: This project demonstrates capabilities in subscription-based data modeling, dbt transformation, temporal analysis, and visualization of business metrics.
+<img width="1366" height="663" alt="Figure_1" src="https://github.com/user-attachments/assets/1ec70c01-ff19-440e-b3a0-fd2dde464171" />
