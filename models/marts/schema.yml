@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: fct_arr_changes
+    description: Final fact table showing monthly ARR changes with categorization
+    columns:
+      - name: month_end
+        description: Last day of the month for the ARR calculation
+        tests:
+          - not_null
+          - unique
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: date
+      
+      - name: account_id
+        description: Unique identifier for the customer account
+        tests:
+          - not_null
+      
+      - name: monthly_arr
+        description: Total ARR for the account in the given month
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      
+      - name: prev_month_arr
+        description: Previous month's ARR for comparison
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      
+      - name: arr_change
+        description: Month-over-month change in ARR
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: decimal
+      
+      - name: arr_change_category
+        description: Categorization of the ARR change (New, Upgrade, Downgrade, Churn, Reactivation, No-change)
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['New', 'Upgrade', 'Downgrade', 'Churn', 'Reactivation', 'No-change']
+      
+      - name: active_subscriptions
+        description: Number of active subscriptions in the month
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      
+      - name: year
+        description: Year component of the month_end date
+        tests:
+          - not_null
+      
+      - name: month
+        description: Month component of the month_end date
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 12

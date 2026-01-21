@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: stg_subscriptions
+    description: Staging model for cleaned subscription data
+    columns:
+      - name: account_id
+        description: Unique identifier for the customer account
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['12345']
+      
+      - name: subscription_id
+        description: Unique identifier for each subscription
+        tests:
+          - not_null
+          - unique
+      
+      - name: subscription_quantity
+        description: Number of units in the subscription
+        tests:
+          - not_null
+      
+      - name: deal_close_date
+        description: Date when the subscription deal was closed
+        tests:
+          - not_null
+      
+      - name: product_line
+        description: Product line category (Desktop, Web, Verify)
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Desktop', 'Web', 'Verify']
+      
+      - name: status
+        description: Current status of the subscription
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['active', 'expired']
+      
+      - name: start_date
+        description: Start date of the subscription
+        tests:
+          - not_null
+      
+      - name: end_date
+        description: End date of the subscription
+        tests:
+          - not_null
+      
+      - name: arr_usd
+        description: Annual Recurring Revenue in USD
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
